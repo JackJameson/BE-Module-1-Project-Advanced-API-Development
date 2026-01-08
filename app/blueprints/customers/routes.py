@@ -1,11 +1,36 @@
-from .schemas import customer_schema, customers_schema
+from .schemas import customer_schema, customers_schema, login_schema
 from flask import request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy import select
 from app.models import Customer, db
 from . import customers_bp
 from app.extensions import limiter, cache
+from app.utils.util import encode_token, token_required
 
+@customers_bp.route('/login', methods=['POST'])
+def login():
+    try:
+        credentials = login_schema.load(request.json)
+        email = credentials['email']
+        password = credentials['password']
+    except ValidationError as e:
+        return jsonify(e.messages), 400
+    
+    query = select(Customer).where(Customer.email == email)
+    customer = db.session.execute(query).scalars().first()
+
+    if customer and customer.password == password:
+        token = encode_token(customer.id)
+        response = {
+            "status": "success",
+            "message": "successfully logged in",
+            "token": token
+        }
+        return jsonify(response), 200
+    else:
+        return jsonify({"error": "Invalid email or password"}), 401
+    
+    
 
 @customers_bp.route('/', methods=['POST'])
 @limiter.limit("5 per day")
@@ -57,9 +82,11 @@ def update_customer(customer_id):
     db.session.commit()
     return customer_schema.jsonify(customer), 200
 
-@customers_bp.route('/<int:customer_id>', methods=['DELETE'])
+@customers_bp.route('/', methods=['DELETE'])
+@token_required
 def delete_customer(customer_id):
-    customer = db.session.get(Customer, customer_id)
+    query = select(Customer).where(Customer.id == customer_id)
+    customer = db.session.execute(query).scalars().first()
     if not customer:
         return jsonify({"error": "Customer not found"}), 404
 
