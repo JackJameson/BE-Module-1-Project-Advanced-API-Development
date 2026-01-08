@@ -4,9 +4,11 @@ from marshmallow import ValidationError
 from sqlalchemy import select
 from app.models import Customer, db
 from . import customers_bp
+from app.extensions import limiter, cache
 
 
 @customers_bp.route('/', methods=['POST'])
+@limiter.limit("5 per day")
 def create_customer():
     try:
         customer_data = customer_schema.load(request.get_json())
@@ -24,6 +26,7 @@ def create_customer():
     return customer_schema.jsonify(new_customer), 201
 
 @customers_bp.route('/', methods=['GET'])
+@cache.cached(timeout=60)
 def get_customers():
     query = select(Customer)
     customers = db.session.execute(query).scalars().all()
