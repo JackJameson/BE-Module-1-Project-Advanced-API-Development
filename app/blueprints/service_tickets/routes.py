@@ -5,6 +5,7 @@ from sqlalchemy import select
 from app.models import ServiceTicket, Mechanic, db
 from . import service_tickets_bp
 from app.blueprints.mechanics.schemas import mechanic_schema
+from app.utils.util import token_required
 
 
 @service_tickets_bp.route('/', methods=['POST'])
@@ -58,3 +59,13 @@ def remove_mechanic(ticket_id, mechanic_id):
             }), 200
         return jsonify({"error": "Mechanic not assigned to this service ticket"}), 400
     return jsonify({"error": "Service ticket or mechanic not found"}), 404
+
+
+@service_tickets_bp.route('/my-tickets', methods=['GET']) # Endpoint becomes /loans/mine
+@token_required
+def get_my_service_tickets(customer_id):
+    # token_id is passed from the decorator
+    query = select(ServiceTicket).where(ServiceTicket.customer_id == customer_id)
+    service_tickets = db.session.execute(query).scalars().all()
+
+    return service_tickets_schema.jsonify(service_tickets), 200
