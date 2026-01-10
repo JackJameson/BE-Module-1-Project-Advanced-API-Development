@@ -2,3 +2,4 @@
 __pycache__/
 *.py[cod]
 app/blueprints/customers/__pycache__/routes.cpython-313.pyc
+app/blueprints/customers/__pycache__/routes.cpython-313.pyc
