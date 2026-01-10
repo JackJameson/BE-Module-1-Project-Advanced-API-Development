@@ -50,25 +50,18 @@ def create_customer():
     db.session.commit()
     return customer_schema.jsonify(new_customer), 201
 
-# @books_bp.route('/', methods=['GET'])
-# def get_books():
-#     try:
-#         page = int(request.args.get("page"))
-#         per_page = int(request.args.get("per_page"))
-#         query = select(Book)
-#         books = db.paginate(query, page=page, per_page=per_page)
-#         return books_schema.jsonify(books), 200
-#     except:
-#         query = select(Book)
-#         books = db.session.execute(query).scalars().all()
-#         return books_schema.jsonify(books), 200
-
 @customers_bp.route('/', methods=['GET'])
-@cache.cached(timeout=60)
 def get_customers():
-    query = select(Customer)
-    customers = db.session.execute(query).scalars().all()
-    return customers_schema.jsonify(customers), 200
+    try:
+        page = int(request.args.get("page"))
+        per_page = int(request.args.get("per_page"))
+        query = select(Customer)
+        customers = db.paginate(query, page=page, per_page=per_page)
+        return customers_schema.jsonify(customers), 200
+    except:
+        query = select(Customer)
+        customers = db.session.execute(query).scalars().all()
+        return customers_schema.jsonify(customers), 200
 
 @customers_bp.route('/<int:customer_id>', methods=['GET'])
 def get_customer(customer_id):
