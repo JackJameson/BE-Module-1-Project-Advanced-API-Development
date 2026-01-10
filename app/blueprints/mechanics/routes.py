@@ -62,3 +62,21 @@ def delete_mechanic(mechanic_id):
     db.session.delete(mechanic)
     db.session.commit()
     return jsonify({"message": f"mechanic id: {mechanic_id}, deleted successfully"}), 200
+
+@mechanics_bp.route('/top', methods=['GET'])
+def top_mechanics():
+    query = select(Mechanic)
+    mechanics = db.session.execute(query).scalars().all()
+    
+    mechanics.sort(key=lambda mechanic: len(mechanic.service_tickets), reverse=True)
+    
+    return mechanics_schema.jsonify(mechanics), 200
+
+@mechanics_bp.route('/search', methods=['GET'])
+def search_mechanic():
+    name = request.args.get('name')
+    
+    query = select(Mechanic).where(Mechanic.name.like(f"%{name}%"))
+    mechanics = db.session.execute(query).scalars().all()
+    
+    return mechanics_schema.jsonify(mechanics), 200

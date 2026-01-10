@@ -61,16 +61,14 @@ def remove_mechanic(ticket_id, mechanic_id):
     return jsonify({"error": "Service ticket or mechanic not found"}), 404
 
 
-@service_tickets_bp.route('/my-tickets', methods=['GET']) # Endpoint becomes /loans/mine
+@service_tickets_bp.route('/my-tickets', methods=['GET'])
 @token_required
 def get_my_service_tickets(customer_id):
-    # token_id is passed from the decorator
     query = select(ServiceTicket).where(ServiceTicket.customer_id == customer_id)
     service_tickets = db.session.execute(query).scalars().all()
 
     return service_tickets_schema.jsonify(service_tickets), 200
 
-#update
 @service_tickets_bp.route('/<int:ticket_id>', methods=['PUT'])
 def edit_service_ticket(ticket_id):
     try:
