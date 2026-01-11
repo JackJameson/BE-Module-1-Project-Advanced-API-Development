@@ -1,8 +1,8 @@
-from .schemas import service_ticket_schema, service_tickets_schema, return_service_ticket_schema, edit_service_ticket_schema
+from .schemas import service_ticket_schema, service_tickets_schema, return_service_ticket_schema, edit_service_ticket_schema, inventory_schema
 from flask import request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy import select
-from app.models import ServiceTicket, Mechanic, db
+from app.models import ServiceTicket, Mechanic, db, Inventory
 from . import service_tickets_bp
 from app.blueprints.mechanics.schemas import mechanic_schema
 from app.utils.util import token_required
@@ -95,3 +95,20 @@ def edit_service_ticket(ticket_id):
 
     db.session.commit()
     return return_service_ticket_schema.jsonify(service_ticket), 200
+
+@service_tickets_bp.route('/<int:ticket_id>/add-part/<int:part_id>', methods=['POST'])
+def add_part_to_ticket(ticket_id, part_id):
+    service_ticket = db.session.get(ServiceTicket, ticket_id)
+    part = db.session.get(Inventory, part_id)
+
+    if service_ticket and part:
+        if part not in service_ticket.parts:
+            service_ticket.parts.append(part)
+            db.session.commit()
+            return jsonify({
+                "message": "successfully added part to service ticket",
+                "service_ticket": service_ticket_schema.dump(service_ticket),
+                "part": inventory_schema.dump(part)
+            }), 200
+        return jsonify({"error": "Part already added to this service ticket"}), 400
+    return jsonify({"error": "Service ticket or part not found"}), 404
