@@ -1,10 +1,11 @@
-from .schemas import service_ticket_schema, service_tickets_schema, return_service_ticket_schema, edit_service_ticket_schema, inventory_schema
+from .schemas import service_ticket_schema, service_tickets_schema, return_service_ticket_schema, edit_service_ticket_schema
 from flask import request, jsonify
 from marshmallow import ValidationError
 from sqlalchemy import select
 from app.models import ServiceTicket, Mechanic, db, Inventory
 from . import service_tickets_bp
 from app.blueprints.mechanics.schemas import mechanic_schema
+from app.blueprints.inventory.schemas import inventory_schema
 from app.utils.util import token_required
 
 
